@@ -34,7 +34,7 @@ SOLID 원칙
 
 POJO 코드이다.  
 
-public class MemberServiceImplements implements MemberService{
+```java
 
     private final MemberRepository memberRepository = new MemoryMemberRepository();
 
@@ -46,6 +46,8 @@ public class MemberServiceImplements implements MemberService{
     @Override
     public Member findMember(Long memberId) {
         return memberRepository.findById(memberId);
-    }
-}  
+    } 
+```
+
+이 코드를 보았을 때 memberRepository는 인터페이스인 MemberRepository에 의존한다. 하지만 그 객체는 MemoryMemberRepository이다.  즉, 리포지토리 객체 변경 시 반드시 객체 생서 부분에 코드 변화가 일어나게 된다.  이는 OCP, DIP에 위배된다.
 
