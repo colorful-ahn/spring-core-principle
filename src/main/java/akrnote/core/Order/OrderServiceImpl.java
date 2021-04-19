@@ -1,16 +1,20 @@
 package akrnote.core.Order;
 
-import akrnote.core.Repository.MemoryMemberRepository;
 import akrnote.core.discount.DiscountPolicy;
-import akrnote.core.discount.FixDiscountPolicy;
 import akrnote.core.member.Member;
 import akrnote.core.member.MemberRepository;
 
 public class OrderServiceImpl implements OrderService{
     
-    private final MemberRepository memberRepository = new MemoryMemberRepository();
-    private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
-    
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+
+    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+
+    //private final DiscountPolicy discountPolicy = new FixDiscountPolicy();
     @Override
     public Order createOrder(Long memberId, String itemName, int itemPrice) {
         Member member = memberRepository.findById(memberId);

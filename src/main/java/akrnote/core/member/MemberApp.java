@@ -1,11 +1,13 @@
 package akrnote.core.member;
 
+import akrnote.core.AppConfig;
 import akrnote.core.service.MemberService;
 import akrnote.core.service.MemberServiceImplements;
 
 public class MemberApp {
     public static void main(String[] args) {
-        MemberService memberService = new MemberServiceImplements();
+        AppConfig appConfig = new AppConfig();
+        MemberService memberService = appConfig.memberService();
         Member member = new Member(1L, "memberA", Grade.VIP);
         memberService.join(member);
 

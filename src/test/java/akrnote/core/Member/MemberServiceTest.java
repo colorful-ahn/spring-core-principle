@@ -1,16 +1,24 @@
 package akrnote.core.Member;
 
+import akrnote.core.AppConfig;
 import akrnote.core.member.Grade;
 import akrnote.core.member.Member;
 import akrnote.core.service.MemberService;
 import akrnote.core.service.MemberServiceImplements;
 
 import org.assertj.core.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class MemberServiceTest {
     
-    MemberService memberService = new MemberServiceImplements();
+    MemberService memberService;
+
+    @BeforeEach
+    public void beforeEach(){
+        AppConfig appConfig = new AppConfig();
+        memberService = appConfig.memberService();
+    }
     
     @Test
     void join(){
