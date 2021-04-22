@@ -27,7 +27,7 @@ SOLID 원칙
 >추상화에 의존 해야지 구현체에 의존하면 안된다.
 >반드시 의존은 Interface만!
 
-요약
+OPP
 ----------
 객체 지향의 핵심은 다형성이다. 다만 다형성 만으로는 구현 객체를 변경할 때 client 코드 또한 변경될 수 밖에 없다.
 즉, 다형성 만으로는 OCP, DIP 원칙을 지킬 수 없다.
@@ -50,4 +50,53 @@ POJO 코드이다.
 ```
 
 이 코드를 보았을 때 memberRepository는 인터페이스인 MemberRepository에 의존한다. 하지만 그 객체는 MemoryMemberRepository이다.  즉, 리포지토리 객체 변경 시 반드시 객체 생서 부분에 코드 변화가 일어나게 된다.  이는 OCP, DIP에 위배된다.
+
+스프링 기반 코드 변경
+----------
+이를 해결하기 위해 Spring Framework에서는 Ioc컨테이너, DI컨테이너를 제공한다.  
+AppConfig.java 코드를 통해 이를 알 수 있다.  
+```java
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new FixDiscountPolicy();
+    }
+    @Bean
+    public MemberService memberService(){
+        return new MemberServiceImplements(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        return new OrderServiceImpl(memberRepository(),discountPolicy());
+    }
+}
+```
+AppConfig를 통해 각 구현 객체들을 빈에 등록한다. 이를 통해 얻을 수 있는 장점은 다음과 같다.  
+>이제는 그 어떤 구현체도 다른 구현체를 의존하지 않는다. 즉 인터페이스만을 의존하게 된다.  
+>이러한 빈들의 관리는 프레임워크가 모두 지원해준다.  
+
+```java
+private final MemberRepository memberRepository;
+
+    public MemberServiceImplements(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
+
+    @Override
+    public void join(Member member) {
+        memberRepository.save(member);
+    }
+
+    @Override
+    public Member findMember(Long memberId) {
+        return memberRepository.findById(memberId);
+    }
+```
+이 코드는 위에 적었던 POJO 코드를 스프링 기반으로 변경시킨 것이다. memberRepository는 생성자에 의해 구현체가 정해지게 된다. 이때 이 코드 즉, 구현체는 memberRepository에 어떤 구현체가 들어오던지에 관계없이 자신만의 로직을 수행할 수 있다. 다른 구현체에 의존하지 않기 때문이다. 이를 통해 우리는 OCP와 DIP 원칙을 지킬 수 있게 된다.
 
