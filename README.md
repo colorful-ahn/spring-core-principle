@@ -98,5 +98,54 @@ private final MemberRepository memberRepository;
         return memberRepository.findById(memberId);
     }
 ```
-이 코드는 위에 적었던 POJO 코드를 스프링 기반으로 변경시킨 것이다. memberRepository는 생성자에 의해 구현체가 정해지게 된다. 이때 이 코드 즉, 구현체는 memberRepository에 어떤 구현체가 들어오던지에 관계없이 자신만의 로직을 수행할 수 있다. 다른 구현체에 의존하지 않기 때문이다. 이를 통해 우리는 OCP와 DIP 원칙을 지킬 수 있게 된다.
+이 코드는 위에 적었던 POJO 코드를 스프링 기반으로 변경시킨 것이다. memberRepository는 생성자에 의해 구현체가 정해지게 된다. 이때 이 코드 즉, 구현체는 memberRepository에 어떤 구현체가 들어오던지에 관계없이 자신만의 로직을 수행할 수 있다. 다른 구현체에 의존하지 않기 때문이다. 이를 통해 우리는 OCP와 DIP 원칙을 지킬 수 있게 된다.  
+
+싱글톤 컨테이너
+------------
+싱글톤 이란?  
+>만약 다수의 클라이언트가 서비스에 대해 다중 요청을 보낼 경우 객체가 무수히 많이 생산되게 된다.  
+>이는 메모리 낭비가 굉장히 심하다. POJO로는 이러한 문제를 막기 위해 다음과 같은 코드 형식을 제안한다.  
+```java
+private static final SingletonService instance = new SingletonService();
+
+    public static SingletonService getInstance(){
+        return instance;
+    }
+Private SingletonService
+```  
+Static 영역에 객체를 딱 1개만 생성해 둔 뒤 public get method를 통해 인스턴스에 접근한다.  
+또한 생성자를 private로 선언하여 외부에서 new 키워드를 사용하지 못하게 막아준다.  
+이 경우 객체를 딱 1개만 생성하기 때문에 효율적이라고 볼 수 있다.  
+다만 코드 자체가 너무 길어지고 테스트하기도 어려운 데다 클라이언트가 구체 클래스에 의존하기 때문에 DIP, OCP등의 원칙에 위배된다.  
+#Spring은 이에 대한 간단하고 명료한 답을 제시한다.  
+스프링에 bean으로 등록하는 행위 자체가 싱글톤이 된다.  
+다만 이는 @Autowired 혹은 @Configuration이 있을 때 보장 된다.  
+```java
+@Configuration
+public class AppConfig {
+
+    @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new FixDiscountPolicy();
+    }
+    @Bean
+    public MemberService memberService(){
+        return new MemberServiceImplements(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        return new OrderServiceImpl(memberRepository(),discountPolicy());
+    }
+}
+```  
+이 코드를 보았을 때 memberRepository는 2번 호출 된다.  
+이때 스프링 싱글톤 컨테이너는 @Configuration을 통해 내부의 로직을 통해 해당 Bean을 싱글톤으로 관리한다.  
+만약 @Configuration을 선언해 주지 않는 다면 싱글톤을 보장할 수 없다.  
+#주의 사항으로 Spring Bean은 항상 Stateless하게 설계해야 한다.  
+공유 필드에 대해 stateful하다면 어떤 문제가 생길 지 아무도 보장할 수 없다.  
+묻지도 따지지도 말고 항상 stateless 하게 설계하자.  
 
