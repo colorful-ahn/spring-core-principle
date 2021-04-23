@@ -149,3 +149,53 @@ public class AppConfig {
 공유 필드에 대해 stateful하다면 어떤 문제가 생길 지 아무도 보장할 수 없다.  
 묻지도 따지지도 말고 항상 stateless 하게 설계하자.  
 
+Component 스캔과 의존관계 자동 주입
+-----------------------------
+스프링은 자동으로 빈을 등록하고 서로의 의존 관계를 주입 해준다. 다음 코드는 Scan을 사용하기 전과 후 코드이다.
+```java
+ @Bean
+    public MemberRepository memberRepository(){
+        return new MemoryMemberRepository();
+    }
+    @Bean
+    public DiscountPolicy discountPolicy(){
+        return new FixDiscountPolicy();
+    }
+    @Bean
+    public MemberService memberService(){
+        return new MemberServiceImplements(memberRepository());
+    }
+    @Bean
+    public OrderService orderService(){
+        return new OrderServiceImpl(memberRepository(),discountPolicy());
+    }
+```
+```java
+@ComponentScan
+public class AutoAppConfig {
+
+}
+```
+이 처럼 Config코드가 매우매우 간결해진다.  
+Scan은 기본적으로 모든 프로젝트를 둘러보며 컴포넌트들을 찾는다. (CoreApplication에 설정이 되어있기 때문이다.)  
+다만 @ComponentScan(...) 을 통해 스프링이 검색을 하는 시발점, 위치, 제외할 클래스 등등 여러모로 설정을 해줄 수 가 있다.  
+원래 @Bean으로 등록해 주었던 컴포넌트 들은 다음과 같이 선언을 하여 스프링에게 Bean임을 인식시킨다.  
+```java
+@Component
+public class MemberServiceImplements implements MemberService{
+
+    private final MemberRepository memberRepository;
+
+    @Autowired //생성자에 wire 해줌
+    public MemberServiceImplements(MemberRepository memberRepository) {
+        this.memberRepository = memberRepository;
+    }
+}
+```
+**@Component라는 선언을 해주면 스프링에서 빈임을 인식하고 이를 등록한다.**    
+또한 의존관계는 @Autowired라는 어노테이션을 통해 이어지는데 이는 형식에 맞는 애들을 자동으로 주입해 주는 것이다.  
+>Member Repository 인터페이스를 상속받는 구현 객체를 주입받음.  
+만약, 구현 객체가 중복이 된다면 에러가 발생하게 된다.  
+직접 @Bean을 넣어 객체를 생성할 수도 있다. 이 경우 이름이 똑같다면 우선권은 **수동**이 가지게 된다.  
+**다만 협업 개발의 경우 수동으로 지정할 경우 혼란을 야기할 수 있기때문에 되도록 지양하자**  
+
