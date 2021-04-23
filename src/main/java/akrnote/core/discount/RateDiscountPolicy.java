@@ -2,7 +2,9 @@ package akrnote.core.discount;
 
 import akrnote.core.member.Grade;
 import akrnote.core.member.Member;
+import org.springframework.stereotype.Component;
 
+@Component
 public class RateDiscountPolicy implements DiscountPolicy{
 
     private int discountPercent = 10;

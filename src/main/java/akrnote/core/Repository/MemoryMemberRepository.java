@@ -2,10 +2,12 @@ package akrnote.core.Repository;
 
 import akrnote.core.member.Member;
 import akrnote.core.member.MemberRepository;
+import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Component
 public class MemoryMemberRepository implements MemberRepository {
 
     private static Map<Long, Member> store = new HashMap<>();
