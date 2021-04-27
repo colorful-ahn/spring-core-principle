@@ -225,7 +225,6 @@ public class MemberServiceImplements implements MemberService{
 다음은 final과 생성자 주입을 보여준 좋은 코드이다. 
 ```java
 @Component
-@RequiredArgsConstructor  //final이 붙은 건 필수 값이 되기에 생성자를 생성해줌
 public class OrderServiceImpl implements OrderService{
     
     private final MemberRepository memberRepository;
@@ -261,9 +260,9 @@ public class OrderServiceImpl implements OrderService{
   
 프로젝트 중 조회 할 수 있는 Bean이 2개 이상일 경우  
 특수한 경우이지만 때에따라 DB를 바꿔쓰거나 고객의 할인정책 선택 등등 다형성을 따르되 Bean으로 중복 등록을 해놓아야 하는 상황이 있다.  
-이때 아무런 조치도 취해주지 않는 다면 spring은 NoUniqueBeanDefinitionException을 발생 시킨다. 이를 해결하기 위한 방법은 2가지가 있다.  
-첫번째는 @Qualifier의 사용이다. 이는 빈의 이름을 바꾸는 것이 아니라 별도의 식별자를 생성하는 것이다.  
-두번째는 @Primary이다. 이는 단순히 이 어노테이션이 붙은 컴포넌트가 우위에 있다는 것을 의미한다.  
+이때 아무런 조치도 취해주지 않는 다면 spring은 **NoUniqueBeanDefinitionException**을 발생 시킨다. 이를 해결하기 위한 방법은 2가지가 있다.  
+**첫번째는 @Qualifier의 사용이다.** 이는 빈의 이름을 바꾸는 것이 아니라 별도의 식별자를 생성하는 것이다.  
+**두번째는 @Primary이다.** 이는 단순히 이 어노테이션이 붙은 컴포넌트가 우위에 있다는 것을 의미한다.  
 다만 @Qualifier를 구현 객체 코드에 사용 시 name이 string이기 때문에 오타가 있더라도 complie 오류를 발생시키지 않는다.  
 따라서 이때는 별도의 @Annotation을 생성해줘 오타 시 compile error가 발생하게 조작해주자.  
   
@@ -275,6 +274,6 @@ public class OrderServiceImpl implements OrderService{
 때문에 자동 기능을 적극 사용하는 것이 좋다.  
 기술 지원 로직은 양은 적지만 어플리케이션 전반에 걸쳐 광범위 하게 영향을 미친다.  또 이러한 로직이 모두 잘 적용이 되는지 파악이 어렵다.  
 따라서 기술 지원 로직들은 수동 빈 등록을 사용하여 명확하게 드러내는 것이 좋다.  
-즉, 편리한 자동 기능을 기본적으로 사용하되 유지, 보수, 인수인계 시 이해가 쉽게 다형성을 적극 활용하는 비즈니스 로직들은 수동 등록을 고민해 보아야 하며 직접 등록하는 기술 지원 객체는 수동 등록을 이용하도록 하자.  
+**즉, 편리한 자동 기능을 기본적으로 사용하되 유지, 보수, 인수인계 시 이해가 쉽게 다형성을 적극 활용하는 비즈니스 로직들은 수동 등록을 고민해 보아야 하며 직접 등록하는 기술 지원 객체는 수동 등록을 이용하도록 하자. **
 **많이 변하거나 변할 거 같으면 수동 등록을 해서 보기 쉽게 만들자!**
 
