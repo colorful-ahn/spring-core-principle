@@ -2,6 +2,9 @@ package akrnote.core.discount;
 
 import akrnote.core.member.Grade;
 import akrnote.core.member.Member;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.stereotype.Component;
+
 
 public class FixDiscountPolicy implements DiscountPolicy{
 
