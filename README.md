@@ -277,3 +277,44 @@ public class OrderServiceImpl implements OrderService{
 **즉, 편리한 자동 기능을 기본적으로 사용하되 유지, 보수, 인수인계 시 이해가 쉽게 다형성을 적극 활용하는 비즈니스 로직들은 수동 등록을 고민해 보아야 하며 직접 등록하는 기술 지원 객체는 수동 등록을 이용하도록 하자. 
 많이 변하거나 변할 거 같으면 수동 등록을 해서 보기 쉽게 만들자!**
 
+Bean 생명주기 콜백
+---------------
+Bean은 어떠한 라이프 사이클을 가지고 있을까?  
+**스프링컨테이너생성-> 스프링빈생성-> 의존관계주입-> 초기화콜백-> 사용-> 소멸전콜백-> 스프링 종료**  
+이때 개발자는 초기화 콜백을 통해 객체가 잘 생성되고 의존 주입 또한 잘 이루어 졌는지 또 소멸 전 콜백을 통해 객체가 안전하게 소멸됐는 지 알 필요가 있다. 
+따라서 스프링은 이에대한 간단한 해결책을 지원한다. 
+어떠한 코드에서 객체를 구현하였다.
+```java 
+@Bean
+      public NetworkClient networkClient() {
+          NetworkClient networkClient = new NetworkClient();
+          networkClient.setUrl("http://hello-spring.dev");
+          return networkClient;
+}
+```  
+이때 객체 코드에 
+```java 
+@PostConstruct
+    public void init() {
+System.out.println("NetworkClient.init"); connect();
+call("초기화 연결 메시지");
+}
+    @PreDestroy
+    public void close() {
+        System.out.println("NetworkClient.close");
+        disConnect();
+    }
+```  
+이 2가지 어노테이션이 있다면 각각 초기화 콜백, 소멸 전 콜백으로 작동하게 된다.  
+다만 이러한 방법은 외부 라이브러리일 경우 사용하기 매우 힘들다.  
+라이브러리 객체의 코드를 바꿀 수는 없기 때문이다.  
+이때는
+```java  
+@Bean(initMethod = "init", destroyMethod = "close")
+      public NetworkClient networkClient() {
+          NetworkClient networkClient = new NetworkClient();
+          networkClient.setUrl("http://hello-spring.dev");
+          return networkClient;
+}
+```  
+Bean에 직접 init과 destroy를 설정해 줌으로서 2가지 콜백 함수를 실행할 수 있다.  
