@@ -199,3 +199,82 @@ public class MemberServiceImplements implements MemberService{
 직접 @Bean을 넣어 객체를 생성할 수도 있다. 이 경우 이름이 똑같다면 우선권은 **수동**이 가지게 된다.  
 **다만 협업 개발의 경우 수동으로 지정할 경우 혼란을 야기할 수 있기때문에 되도록 지양하자**  
 
+의존관계 자동 주입
+-------------
+의존관계 주입은 크게 4가지가 있다. 
+>생성자 주입  
+>수정자 주입  
+>필드 주입  
+>메서드 주입  
+
+생성자 주입은 constructor를 이용하여 의존 관계를 주입 받는다.  
+생성자 호출 시점에 딱 1번만 호출 되는 것이 보장된다.  
+때문에 **불변,필수** 의존관계에 사용하는 것이 바람직하다.  
+  
+수정자 주입은 setter method를 통해 이루어 진다.  
+**선택, 변경**이 있을 시 사용 된다.  
+다만 일반적으로 중간에 bean을 교체하는 것은 많이 이루어지는 상황이 아니기때문에 권장되지 않는다.  
+또한 변경이 가능하다는 특성때문에 다른 곳에서 호출 시 매우 조심해야 한다.  
+  
+필드, 메서드 주입은 거의 사용되지 않는다.  
+
+대체로 Spring framework는 Bean의 불변성에 focusing을 가지기 때문에 생성자 주입을 권장 한다.  
+특히, setter나 필드 생성자의 경우 POJO 환경에서는 spring의 DI container가 역할을 하지 못하기 때문에 Unit TEST시 매우 부적합하다.  
+또한 생성자 주입은 final 키워드 라는 강력한 무기를 가지게 된다.  
+반드시 값이 설정되야 하기 때문에 NPE를 막아 준다는 장점이 있다.  
+다음은 final과 생성자 주입을 보여준 좋은 코드이다. 
+```java
+@Component
+@RequiredArgsConstructor  //final이 붙은 건 필수 값이 되기에 생성자를 생성해줌
+public class OrderServiceImpl implements OrderService{
+    
+    private final MemberRepository memberRepository;
+    private final DiscountPolicy discountPolicy;
+
+    @Autowired
+    public OrderServiceImpl(MemberRepository memberRepository, DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+```  
+
+이러한 final과 생성자 주입이 권장됨에 따라 라이브러리 중 lombok이 사용되는 추세이다.  
+이 라이브러리는 final이 붙은 필드를 모아 생성자를 자동으로 만들어 준다.  
+```java
+@Component
+  @RequiredArgsConstructor
+  public class OrderServiceImpl implements OrderService {
+      private final MemberRepository memberRepository;
+      private final DiscountPolicy discountPolicy;
+}
+```  
+이 코드에는 생성자가 없지만 lombok을 통해 생성자가 만들어 진다.  
+이는 프로젝트 out 폴더 classes에서 확인 할 수 있다.
+```java
+@Autowired
+    public OrderServiceImpl(MemberRepository memberRepository, @MainDiscountPolicy DiscountPolicy discountPolicy) {
+        this.memberRepository = memberRepository;
+        this.discountPolicy = discountPolicy;
+    }
+```
+이렇듯 자동으로 구현되어 있다!  
+  
+프로젝트 중 조회 할 수 있는 Bean이 2개 이상일 경우  
+특수한 경우이지만 때에따라 DB를 바꿔쓰거나 고객의 할인정책 선택 등등 다형성을 따르되 Bean으로 중복 등록을 해놓아야 하는 상황이 있다.  
+이때 아무런 조치도 취해주지 않는 다면 spring은 NoUniqueBeanDefinitionException을 발생 시킨다. 이를 해결하기 위한 방법은 2가지가 있다.  
+첫번째는 @Qualifier의 사용이다. 이는 빈의 이름을 바꾸는 것이 아니라 별도의 식별자를 생성하는 것이다.  
+두번째는 @Primary이다. 이는 단순히 이 어노테이션이 붙은 컴포넌트가 우위에 있다는 것을 의미한다.  
+다만 @Qualifier를 구현 객체 코드에 사용 시 name이 string이기 때문에 오타가 있더라도 complie 오류를 발생시키지 않는다.  
+따라서 이때는 별도의 @Annotation을 생성해줘 오타 시 compile error가 발생하게 조작해주자.  
+  
+대체로 spring은 현재 모든 Bean을 불변, 자동 으로 설정하기를 권장한다. 또한 이 방법이 유지,보수 또한 매우 간편하다.  
+다만, 수동 빈 등록이 그렇다고 배제될 수 는 없다. 이 이야기를 하기 전에 2가지 개념을 짚고 넘어가야 한다.  
+**업무 로직 빈** : 웹을 지원하는 컨트롤러, 핵심 비즈니스 로직이 있는 서비스, 데이터 계층의 로직을 처리하는 리포지토리등이 모두 업무 로직이다. 이러한 요구사항은 개발할 때 추가되거나 변경된다.  
+**기술 지원 빈** : 기술적인 문제나 AOP를 처리할 때 주로 사용된다. 데이터베이스 연결이나, 공통 로그 처리 처럼 업무 로직을 지원하기 위한 하부 기술이나 공통 기술들이다.  
+업무 로직은 그 양이 방대하지만 컨트롤러, 서비스, 리포지토리 등 어느정도 유사한 패턴이 있다.  
+때문에 자동 기능을 적극 사용하는 것이 좋다.  
+기술 지원 로직은 양은 적지만 어플리케이션 전반에 걸쳐 광범위 하게 영향을 미친다.  또 이러한 로직이 모두 잘 적용이 되는지 파악이 어렵다.  
+따라서 기술 지원 로직들은 수동 빈 등록을 사용하여 명확하게 드러내는 것이 좋다.  
+즉, 편리한 자동 기능을 기본적으로 사용하되 유지, 보수, 인수인계 시 이해가 쉽게 다형성을 적극 활용하는 비즈니스 로직들은 수동 등록을 고민해 보아야 하며 직접 등록하는 기술 지원 객체는 수동 등록을 이용하도록 하자.  
+**많이 변하거나 변할 거 같으면 수동 등록을 해서 보기 쉽게 만들자!**
+
